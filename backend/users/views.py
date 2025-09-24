@@ -1,7 +1,7 @@
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from .models import User, UserSettings
-from .serializers import UserSerializer, UserSettingsSerializer
+from .models import User
+from .serializers import UserSerializer
 from rest_framework.permissions import BasePermission
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -39,15 +39,6 @@ class AdminDeleteUserView(generics.DestroyAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated, IsAdminRole]
-
-class AccountSettingsView(generics.RetrieveUpdateAPIView):
-    serializer_class = UserSettingsSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_object(self):
-        # Ensure settings exists (created in serializer, but guard anyway)
-        settings, _ = UserSettings.objects.get_or_create(user=self.request.user)
-        return settings
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = TokenObtainPairSerializer

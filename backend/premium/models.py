@@ -3,50 +3,42 @@ from django.db import models
 from django.utils import timezone
 from datetime import timedelta
 
-User = settings.AUTH_USER_MODEL
 
 class PremiumSubscription(models.Model):
-    PLAN_MONTHLY = 'monthly'
-    PLAN_YEARLY = 'yearly'
-    PLAN_CHOICES = [
-        (PLAN_MONTHLY, 'Monthly'),
-        (PLAN_YEARLY, 'Yearly'),
+    TYPE_MONTH = "month"
+    TYPE_YEAR = "year"
+    TYPE_CHOICES = [
+        (TYPE_MONTH, "Monthly"),
+        (TYPE_YEAR, "Yearly"),
     ]
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='subscriptions')
-    plan_type = models.CharField(max_length=10, choices=PLAN_CHOICES)
+    TIER_ONE = 1
+    TIER_TWO = 2
+    TIER_THREE = 3
+    TIER_CHOICES = [
+        (TIER_ONE, "Tier 1"),
+        (TIER_TWO, "Tier 2"),
+        (TIER_THREE, "Tier 3"),
+    ]
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="premium_subscriptions")
+    type = models.CharField(max_length=10, choices=TYPE_CHOICES)
     start_date = models.DateTimeField(default=timezone.now)
-    end_date = models.DateTimeField()
+    end_date = models.DateTimeField(blank=True, null=True)
+    tier = models.PositiveSmallIntegerField(choices=TIER_CHOICES, default=TIER_ONE)
+
+    class Meta:
+        ordering = ["-start_date"]
 
     def save(self, *args, **kwargs):
-        # If end_date not provided, compute based on plan_type
         if not self.end_date:
-            if self.plan_type == self.PLAN_YEARLY:
-                self.end_date = self.start_date + timedelta(days=365)
-            else:
-                self.end_date = self.start_date + timedelta(days=30)
+            duration = timedelta(days=365) if self.type == self.TYPE_YEAR else timedelta(days=30)
+            self.end_date = self.start_date + duration
         super().save(*args, **kwargs)
 
-    def is_active(self):
+    def __str__(self) -> str:  # pragma: no cover - simple representation
+        return f"{self.user} - {self.type}"
+
+    def is_active(self) -> bool:
         now = timezone.now()
         return self.start_date <= now <= self.end_date
-
-    def __str__(self):
-        return f"{self.user} - {self.plan_type} ({self.start_date.date()} → {self.end_date.date()})"
-
-
-class PremiumFeature(models.Model):
-    FEATURE_TYPES = [
-        ('energy_boost', 'Energy Boost'),
-        ('streak_protection', 'Streak Protection'),
-        ('profile_customization', 'Profile Customization'),
-        ('premium_course_access', 'Premium Course Access'),
-    ]
-
-    subscription = models.ForeignKey(PremiumSubscription, on_delete=models.CASCADE, related_name='features')
-    feature_type = models.CharField(max_length=50, choices=FEATURE_TYPES)
-    created_at = models.DateTimeField(auto_now_add=True)
-    metadata = models.JSONField(blank=True, null=True)
-
-    def __str__(self):
-        return f"{self.subscription.user} - {self.feature_type}"

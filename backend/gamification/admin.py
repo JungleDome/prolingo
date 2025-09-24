@@ -1,40 +1,36 @@
 from django.contrib import admin
-from .models import Leaderboard, Levels, DailyStreaks, Energy, Rewards
+from .models import Achievement, DailyStreak, UserClaimedAchievement, UserGameInfo
 
-@admin.register(Leaderboard)
-class LeaderboardAdmin(admin.ModelAdmin):
-    list_display = ('user', 'streak_count', 'level', 'points')
-    list_filter = ('level', 'points')
-    search_fields = ('user__username',)
-    ordering = ('-points', '-level', '-streak_count')
 
-@admin.register(Levels)
-class LevelsAdmin(admin.ModelAdmin):
-    list_display = ('user', 'current_level', 'rewards_earned_preview')
-    list_filter = ('current_level',)
-    search_fields = ('user__username',)
-    ordering = ('-current_level',)
-    
-    def rewards_earned_preview(self, obj):
-        return obj.rewards_earned[:50] + "..." if len(obj.rewards_earned) > 50 else obj.rewards_earned
+@admin.register(UserGameInfo)
+class UserGameInfoAdmin(admin.ModelAdmin):
+    list_display = ("user", "xp_value", "energy_value", "energy_last_updated_date")
+    search_fields = ("user__username",)
 
-@admin.register(DailyStreaks)
-class DailyStreaksAdmin(admin.ModelAdmin):
-    list_display = ('user', 'streak_count', 'streak_date')
-    list_filter = ('streak_date', 'streak_count')
-    search_fields = ('user__username',)
-    ordering = ('-streak_count', '-streak_date')
 
-@admin.register(Energy)
-class EnergyAdmin(admin.ModelAdmin):
-    list_display = ('user', 'current_energy', 'last_updated')
-    list_filter = ('current_energy', 'last_updated')
-    search_fields = ('user__username',)
-    ordering = ('-current_energy',)
+@admin.register(DailyStreak)
+class DailyStreakAdmin(admin.ModelAdmin):
+    list_display = ("user", "daily_streak_date")
+    list_filter = ("daily_streak_date",)
+    search_fields = ("user__username",)
 
-@admin.register(Rewards)
-class RewardsAdmin(admin.ModelAdmin):
-    list_display = ('user', 'reward_type', 'earned_date')
-    list_filter = ('reward_type', 'earned_date')
-    search_fields = ('user__username',)
-    ordering = ('-earned_date',)
+
+@admin.register(Achievement)
+class AchievementAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "target_xp_value",
+        "target_streak_value",
+        "target_completed_test",
+        "reward_type",
+        "reward_amount",
+    )
+    list_filter = ("reward_type",)
+    search_fields = ("reward_content",)
+
+
+@admin.register(UserClaimedAchievement)
+class UserClaimedAchievementAdmin(admin.ModelAdmin):
+    list_display = ("user", "achievement", "claimed_date")
+    search_fields = ("user__username",)
+    autocomplete_fields = ("achievement", "user")
