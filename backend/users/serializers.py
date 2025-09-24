@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, UserSettings
+from .models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -13,7 +13,7 @@ class UserSerializer(serializers.ModelSerializer):
             "profile_icon",
             "role",
             "registration_date",
-            "is_premium",
+            "enable_email_notification",
         ]
         read_only_fields = ["id", "registration_date"]
         extra_kwargs = {"password": {"write_only": True}}
@@ -24,12 +24,4 @@ class UserSerializer(serializers.ModelSerializer):
         if password:
             user.set_password(password)
         user.save()
-        # create default settings
-        UserSettings.objects.create(user=user)
         return user
-
-
-class UserSettingsSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserSettings
-        fields = ["email_notifications", "streak_notifications"]

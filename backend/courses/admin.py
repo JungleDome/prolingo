@@ -1,43 +1,69 @@
 from django.contrib import admin
-from .models import Course, Chapter, Test, Question, Option, UserCourse, UserChapter, UserTestResult, UserAnswer
+
+from .models import (
+    Chapter,
+    Course,
+    Question,
+    QuestionChoice,
+    Test,
+    UserCourse,
+    UserTest,
+    UserTestAnswer,
+)
+
 
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
-    list_display = ('title', 'created_by', 'created_date', 'status')
-    search_fields = ('title', 'description', 'created_by__username')
-    list_filter = ('status', 'created_date')
+    list_display = ("title", "status")
+    search_fields = ("title", "description")
+    list_filter = ("status",)
+
 
 @admin.register(Chapter)
 class ChapterAdmin(admin.ModelAdmin):
-    list_display = ('title', 'course', 'order_index')
-    list_filter = ('course',)
-    ordering = ('course', 'order_index')
+    list_display = ("title", "course", "order_index")
+    list_filter = ("course",)
+    ordering = ("course", "order_index")
+
 
 @admin.register(Test)
 class TestAdmin(admin.ModelAdmin):
-    list_display = ('id', 'chapter', 'test_type', 'repeatable', 'max_attempts', 'passing_score')
+    list_display = ("id", "chapter", "type", "passing_score", "order_index")
+    list_filter = ("type",)
+    ordering = ("chapter", "order_index")
+    search_fields = ("chapter__title",)
+
 
 @admin.register(Question)
 class QuestionAdmin(admin.ModelAdmin):
-    list_display = ('id', 'test', 'question_type', 'points')
-    search_fields = ('question_text',)
+    list_display = ("id", "test", "type", "order_index")
+    search_fields = ("text",)
+    ordering = ("test", "order_index")
 
-@admin.register(Option)
-class OptionAdmin(admin.ModelAdmin):
-    list_display = ('id', 'question', 'option_text', 'is_correct')
+
+@admin.register(QuestionChoice)
+class QuestionChoiceAdmin(admin.ModelAdmin):
+    list_display = ("id", "question", "order_index")
+    ordering = ("question", "order_index")
+
 
 @admin.register(UserCourse)
 class UserCourseAdmin(admin.ModelAdmin):
-    list_display = ('user', 'course', 'progress_percent', 'status')
+    list_display = ("user", "course", "enrollment_date", "is_dropped")
+    list_filter = ("is_dropped",)
+    autocomplete_fields = ("user", "course")
 
-@admin.register(UserChapter)
-class UserChapterAdmin(admin.ModelAdmin):
-    list_display = ('user', 'chapter', 'completed', 'last_accessed')
 
-@admin.register(UserTestResult)
-class UserTestResultAdmin(admin.ModelAdmin):
-    list_display = ('user', 'test', 'score', 'attempt_number', 'attempt_date', 'passed')
+@admin.register(UserTest)
+class UserTestAdmin(admin.ModelAdmin):
+    list_display = ("user", "test", "attempt_date", "time_spent")
+    autocomplete_fields = ("user", "test")
+    search_fields = ("user__username", "test__chapter__title")
 
-@admin.register(UserAnswer)
-class UserAnswerAdmin(admin.ModelAdmin):
-    list_display = ('result', 'question', 'is_correct', 'time_spent')
+
+@admin.register(UserTestAnswer)
+class UserTestAnswerAdmin(admin.ModelAdmin):
+    list_display = ("user_test", "is_correct")
+    list_filter = ("is_correct",)
+    autocomplete_fields = ("user_test",)
+    search_fields = ("user_test__user__username",)
