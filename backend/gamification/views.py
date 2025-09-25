@@ -1,9 +1,9 @@
 from rest_framework import generics, status
-from rest_framework.permissions import IsAuthenticated, BasePermission, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from django.utils import timezone
-from drf_spectacular.utils import extend_schema
+from django.db.models import F
 from .models import Leaderboard, Levels, DailyStreaks, Energy, Rewards
 from .serializers import (
     LeaderboardSerializer, LevelsSerializer, DailyStreaksSerializer,
@@ -12,9 +12,7 @@ from .serializers import (
 import json
 from users.permissions import IsAdminRole, IsOwnerOrAdmin
 
-
 # Leaderboard Views
-@extend_schema_with_tags("Leaderboard")
 class GetLeaderboardView(generics.ListAPIView):
     """Fetch top users by points/level"""
     serializer_class = LeaderboardSerializer
@@ -23,7 +21,6 @@ class GetLeaderboardView(generics.ListAPIView):
     def get_queryset(self):
         return Leaderboard.objects.all()[:50]  # Top 50 users
 
-@extend_schema_with_tags("Leaderboard")
 class UpdateLeaderboardView(generics.RetrieveUpdateAPIView):
     """Update user's rank"""
     serializer_class = LeaderboardSerializer
@@ -34,7 +31,6 @@ class UpdateLeaderboardView(generics.RetrieveUpdateAPIView):
         return leaderboard
 
 # Levels Views
-@extend_schema_with_tags("Levels")
 class CreateLevelView(generics.CreateAPIView):
     """Assign starting level (admin only)"""
     serializer_class = LevelsSerializer
@@ -47,7 +43,6 @@ class CreateLevelView(generics.CreateAPIView):
             user = User.objects.get(id=user_id)
             serializer.save(user=user)
 
-@extend_schema_with_tags("Levels")
 class GetLevelView(generics.RetrieveAPIView):
     """Get current level"""
     serializer_class = LevelsSerializer
@@ -57,7 +52,6 @@ class GetLevelView(generics.RetrieveAPIView):
         level, _ = Levels.objects.get_or_create(user=self.request.user)
         return level
 
-@extend_schema_with_tags("Levels")
 class UpdateLevelView(generics.RetrieveUpdateAPIView):
     """Increase level when conditions are met"""
     serializer_class = LevelsSerializer
@@ -67,7 +61,6 @@ class UpdateLevelView(generics.RetrieveUpdateAPIView):
         level, _ = Levels.objects.get_or_create(user=self.request.user)
         return level
 
-@extend_schema_with_tags("Levels")
 class DeleteLevelView(generics.DestroyAPIView):
     """Reset level progress"""
     serializer_class = LevelsSerializer
@@ -77,7 +70,6 @@ class DeleteLevelView(generics.DestroyAPIView):
         return Levels.objects.get(user=self.request.user)
 
 # Daily Streaks Views
-@extend_schema_with_tags("Streaks")
 class CreateStreakView(generics.CreateAPIView):
     """Start streak"""
     serializer_class = DailyStreaksSerializer
@@ -86,7 +78,6 @@ class CreateStreakView(generics.CreateAPIView):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
-@extend_schema_with_tags("Streaks")
 class GetStreakView(generics.RetrieveAPIView):
     """Retrieve streak status"""
     serializer_class = DailyStreaksSerializer
@@ -96,7 +87,6 @@ class GetStreakView(generics.RetrieveAPIView):
         streak, _ = DailyStreaks.objects.get_or_create(user=self.request.user)
         return streak
 
-@extend_schema_with_tags("Streaks")
 class UpdateStreakView(generics.RetrieveUpdateAPIView):
     """Increment streak"""
     serializer_class = DailyStreaksSerializer
@@ -118,7 +108,6 @@ class UpdateStreakView(generics.RetrieveUpdateAPIView):
         
         serializer.save()
 
-@extend_schema_with_tags("Streaks")
 class DeleteStreakView(generics.DestroyAPIView):
     """Reset streak"""
     serializer_class = DailyStreaksSerializer
@@ -128,7 +117,6 @@ class DeleteStreakView(generics.DestroyAPIView):
         return DailyStreaks.objects.get(user=self.request.user)
 
 # Energy Views
-@extend_schema_with_tags("Energy")
 class CreateEnergyView(generics.CreateAPIView):
     """Initialize energy"""
     serializer_class = EnergySerializer
@@ -137,7 +125,6 @@ class CreateEnergyView(generics.CreateAPIView):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
-@extend_schema_with_tags("Energy")
 class GetEnergyView(generics.RetrieveAPIView):
     """Fetch energy level"""
     serializer_class = EnergySerializer
@@ -147,7 +134,6 @@ class GetEnergyView(generics.RetrieveAPIView):
         energy, _ = Energy.objects.get_or_create(user=self.request.user)
         return energy
 
-@extend_schema_with_tags("Energy")
 class UpdateEnergyView(generics.RetrieveUpdateAPIView):
     """Decrease/increase energy"""
     serializer_class = EnergySerializer
@@ -157,7 +143,6 @@ class UpdateEnergyView(generics.RetrieveUpdateAPIView):
         energy, _ = Energy.objects.get_or_create(user=self.request.user)
         return energy
 
-@extend_schema_with_tags("Energy")
 class DeleteEnergyView(generics.DestroyAPIView):
     """Reset energy"""
     serializer_class = EnergySerializer
@@ -167,7 +152,6 @@ class DeleteEnergyView(generics.DestroyAPIView):
         return Energy.objects.get(user=self.request.user)
 
 # Rewards Views
-@extend_schema_with_tags("Rewards")
 class CreateRewardView(generics.CreateAPIView):
     """Add reward when unlocked"""
     serializer_class = RewardsSerializer
@@ -176,7 +160,6 @@ class CreateRewardView(generics.CreateAPIView):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
-@extend_schema_with_tags("Rewards")
 class GetRewardsView(generics.ListAPIView):
     """List earned rewards"""
     serializer_class = RewardsSerializer
@@ -185,7 +168,6 @@ class GetRewardsView(generics.ListAPIView):
     def get_queryset(self):
         return Rewards.objects.filter(user=self.request.user)
 
-@extend_schema_with_tags("Rewards")
 class UpdateRewardView(generics.RetrieveUpdateAPIView):
     """Update reward status"""
     serializer_class = RewardsSerializer
@@ -194,7 +176,6 @@ class UpdateRewardView(generics.RetrieveUpdateAPIView):
     def get_queryset(self):
         return Rewards.objects.filter(user=self.request.user)
 
-@extend_schema_with_tags("Rewards")
 class DeleteRewardView(generics.DestroyAPIView):
     """Remove reward"""
     serializer_class = RewardsSerializer
@@ -204,7 +185,6 @@ class DeleteRewardView(generics.DestroyAPIView):
         return Rewards.objects.filter(user=self.request.user)
 
 # Helper API endpoints for game mechanics
-@extend_schema(tags=["Gamification Helpers"])
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def increment_user_streak(request):
@@ -233,7 +213,6 @@ def increment_user_streak(request):
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-@extend_schema(tags=["Gamification Helpers"])
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def use_energy(request):

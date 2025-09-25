@@ -3,7 +3,6 @@ Django
 django-cors-headers
 djangorestframework
 djangorestframework-simplejwt
-drf-spectacular
 PyJWT
 pytz
 sqlparse

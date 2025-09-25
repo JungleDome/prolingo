@@ -1,14 +1,15 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import generics, permissions
-from rest_framework.permissions import AllowAny
+from rest_framework import generics, permissions, status
+from rest_framework.response import Response
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from django.utils import timezone
 
 from .models import Feedback, AdminFeedbackResponse, AdminAction
 from .serializers import FeedbackSerializer, AdminFeedbackResponseSerializer, AdminActionSerializer
 from users.permissions import IsAdminRole, IsOwnerOrAdmin
 
-
 # Feedback endpoints
-@extend_schema_with_tags("Feedback")
 class CreateFeedbackView(generics.CreateAPIView):
     serializer_class = FeedbackSerializer
     permission_classes = [AllowAny]
@@ -16,7 +17,6 @@ class CreateFeedbackView(generics.CreateAPIView):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
-@extend_schema_with_tags("Feedback")
 class UserFeedbackListView(generics.ListAPIView):
     serializer_class = FeedbackSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -24,20 +24,17 @@ class UserFeedbackListView(generics.ListAPIView):
     def get_queryset(self):
         return Feedback.objects.filter(user=self.request.user)
 
-@extend_schema_with_tags("Admin Feedback")
 class AdminFeedbackListView(generics.ListAPIView):
     serializer_class = FeedbackSerializer
     permission_classes = [permissions.IsAuthenticated, IsAdminRole]
     queryset = Feedback.objects.all().order_by("-submitted_date")
 
-@extend_schema_with_tags("Feedback")
 class FeedbackDetailView(generics.RetrieveDestroyAPIView):
     serializer_class = FeedbackSerializer
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]
     queryset = Feedback.objects.all()
 
 # Admin responses
-@extend_schema_with_tags("Feedback Responses")
 class CreateResponseView(generics.CreateAPIView):
     serializer_class = AdminFeedbackResponseSerializer
     permission_classes = [permissions.IsAuthenticated, IsAdminRole]
@@ -45,7 +42,6 @@ class CreateResponseView(generics.CreateAPIView):
     def perform_create(self, serializer):
         serializer.save(admin=self.request.user)
 
-@extend_schema_with_tags("Feedback Responses")
 class ResponseListByFeedbackView(generics.ListAPIView):
     serializer_class = AdminFeedbackResponseSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -58,14 +54,12 @@ class ResponseListByFeedbackView(generics.ListAPIView):
             return AdminFeedbackResponse.objects.filter(feedback=feedback).order_by("-response_date")
         return AdminFeedbackResponse.objects.none()
 
-@extend_schema_with_tags("Feedback Responses")
 class ResponseDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = AdminFeedbackResponseSerializer
     permission_classes = [permissions.IsAuthenticated, IsAdminRole]
     queryset = AdminFeedbackResponse.objects.all()
 
 # Admin actions (audit)
-@extend_schema_with_tags("Admin Actions")
 class LogAdminActionView(generics.CreateAPIView):
     serializer_class = AdminActionSerializer
     permission_classes = [permissions.IsAuthenticated, IsAdminRole]
@@ -73,7 +67,6 @@ class LogAdminActionView(generics.CreateAPIView):
     def perform_create(self, serializer):
         serializer.save(admin=self.request.user)
 
-@extend_schema_with_tags("Admin Actions")
 class AdminActionsListView(generics.ListAPIView):
     serializer_class = AdminActionSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -91,7 +84,6 @@ class AdminActionsListView(generics.ListAPIView):
             return qs
         return AdminAction.objects.none()
 
-@extend_schema_with_tags("Admin Actions")
 class AdminActionDeleteView(generics.DestroyAPIView):
     serializer_class = AdminActionSerializer
     permission_classes = [permissions.IsAuthenticated, IsAdminRole]
