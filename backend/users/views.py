@@ -2,17 +2,10 @@ from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import User, UserSettings
 from .serializers import UserSerializer, UserSettingsSerializer
-from rest_framework.permissions import BasePermission
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from stats.models import Stats
-from server.schema import extend_schema_with_tags
-
-class IsAdminRole(BasePermission):
-    def has_permission(self, request, _):
-        return bool(
-            request.user and request.user.is_authenticated and getattr(request.user, "role", None) == "admin"
-        )
+from .permissions import IsAdminRole
 
 @extend_schema_with_tags("Users")
 class CreateUserView(generics.CreateAPIView):
