@@ -1,9 +1,10 @@
-from django.shortcuts import render
-from rest_framework import viewsets, generics
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework import generics
+from rest_framework.permissions import IsAuthenticated
 from .models import Note
 from .serializers import NoteSerializer
+from server.schema import extend_schema_with_tags
 
+@extend_schema_with_tags("Notes")
 class NoteListCreate(generics.ListCreateAPIView):
     serializer_class = NoteSerializer
     permission_classes = [IsAuthenticated]
@@ -18,6 +19,7 @@ class NoteListCreate(generics.ListCreateAPIView):
         else:
             print(serializer.errors)
 
+@extend_schema_with_tags("Notes")
 class NoteDelete(generics.DestroyAPIView):
     serializer_class = NoteSerializer
     permission_classes = [IsAuthenticated]
