@@ -1,11 +1,11 @@
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from rest_framework import generics, permissions, status
-from rest_framework.response import Response
+from rest_framework import generics, permissions
 from datetime import timedelta
 
 from .models import PremiumSubscription, PremiumFeature
 from .serializers import PremiumSubscriptionSerializer, PremiumFeatureSerializer
+from server.schema import extend_schema_with_tags
 
 # simple admin check used in other apps as well
 class IsAdminRole(permissions.BasePermission):
@@ -25,6 +25,7 @@ class IsOwnerOrAdmin(permissions.BasePermission):
         return False
 
 # Subscriptions
+@extend_schema_with_tags("Premium Subscriptions")
 class CreateSubscriptionView(generics.CreateAPIView):
     serializer_class = PremiumSubscriptionSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -33,6 +34,7 @@ class CreateSubscriptionView(generics.CreateAPIView):
         # compute end_date automatically in model.save if not provided
         serializer.save(user=self.request.user)
 
+@extend_schema_with_tags("Premium Subscriptions")
 class GetSubscriptionView(generics.RetrieveAPIView):
     """
     Get active subscription for current user (or for user_id if admin passes ?user_id=)
@@ -48,6 +50,7 @@ class GetSubscriptionView(generics.RetrieveAPIView):
             return get_object_or_404(PremiumSubscription, user_id=user_id, start_date__lte=timezone.now(), end_date__gte=timezone.now())
         return get_object_or_404(PremiumSubscription, user=user, start_date__lte=timezone.now(), end_date__gte=timezone.now())
 
+@extend_schema_with_tags("Premium Subscriptions")
 class UpdateSubscriptionView(generics.RetrieveUpdateAPIView):
     serializer_class = PremiumSubscriptionSerializer
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]
@@ -78,12 +81,14 @@ class UpdateSubscriptionView(generics.RetrieveUpdateAPIView):
 
         serializer.save()
 
+@extend_schema_with_tags("Premium Subscriptions")
 class DeleteSubscriptionView(generics.DestroyAPIView):
     serializer_class = PremiumSubscriptionSerializer
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]
     queryset = PremiumSubscription.objects.all()
 
 # Features
+@extend_schema_with_tags("Premium Features")
 class CreatePremiumFeatureView(generics.CreateAPIView):
     serializer_class = PremiumFeatureSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -95,6 +100,7 @@ class CreatePremiumFeatureView(generics.CreateAPIView):
             raise permissions.PermissionDenied("Not allowed to add feature to this subscription")
         serializer.save()
 
+@extend_schema_with_tags("Premium Features")
 class GetPremiumFeaturesView(generics.ListAPIView):
     serializer_class = PremiumFeatureSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -107,11 +113,13 @@ class GetPremiumFeaturesView(generics.ListAPIView):
             return PremiumFeature.objects.filter(subscription__user_id=user_id).order_by('-created_at')
         return PremiumFeature.objects.filter(subscription__user=user).order_by('-created_at')
 
+@extend_schema_with_tags("Premium Features")
 class UpdatePremiumFeatureView(generics.RetrieveUpdateAPIView):
     serializer_class = PremiumFeatureSerializer
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]
     queryset = PremiumFeature.objects.all()
 
+@extend_schema_with_tags("Premium Features")
 class DeletePremiumFeatureView(generics.DestroyAPIView):
     serializer_class = PremiumFeatureSerializer
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]
